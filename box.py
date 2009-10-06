@@ -65,17 +65,18 @@ class BMap:
 
 
     def setMap(self, text, size, pos):
+        """ Define novo valor para os atributos do mapa"""
         self.text = list(text)
         self.size = size
-        self.pos  = pos
+        self.pos = pos
  
 
-    def cropImage(self,simbol):
+    def cropImage(self, simbol):
         """ Retorna as coordenadas de corte na imagem
         obj.cropImage('@') -> (x,y)"""
         if simbol != '8':
             s = BMap.SIMBOLS.find(simbol)
-            return 0,1+s+(BMap.BOX_SIZE * s)
+            return 0, 1 + s + (BMap.BOX_SIZE * s)
         else:
             return (-100,-100)       
 
@@ -87,23 +88,27 @@ class BMap:
 
 
 class Character:
-    """Classe que representa o personagem e é responsável pela movimentação"""
+    """Classe que representa o personagem é responsável
+     pela movimentação"""
     def __init__(self, boxmap):
-        self.bmap = boxmap                      #objeto de BMap que o boneco irá atualizar.
+        self.bmap = boxmap        # objeto de BMap que o boneco irá atualizar.
 
 
     def move(self, moviment):
         """ Move o personagem pelo mapa e atualiza a posição e a lista do mapa
-        retorna as posições em volta do movimento [pos anterior, pos atual, pos da frente]"""
-        x,y = self.bmap.pos 
+        retorna as posições em volta do movimento
+        [pos anterior, pos atual, pos da frente]"""
+        x, y = self.bmap.pos 
         w = self.bmap.size[0]
         pos_now = (y * w) + x
         refresh = [pos_now]
 
-        if moviment in ['up','left']: inc_mov = -1
-        else: inc_mov = 1
+        if moviment in ['up', 'left']: 
+            inc_mov = -1
+        else: 
+            inc_mov = 1
 
-        if moviment in ['up','down']: 
+        if moviment in ['up', 'down']: 
             next_box = pos_now + (w * inc_mov)
             nnext_box = pos_now + (2 * w * inc_mov)
         else:
@@ -112,43 +117,47 @@ class Character:
 
         refresh += [next_box]
         #movimentos livres
-        if self.bmap.text[next_box] in ['0','.']:
-            if moviment in ['up','down']:
+        if self.bmap.text[next_box] in ['0', '.']:
+            if moviment in ['up', 'down']:
                 y += inc_mov
             else:
                 x += inc_mov
-
-        elif self.bmap.text[next_box] in ['*','!']: #movimentos com a caixa
-            if self.bmap.text[nnext_box] in ['0','.']: 
-                if self.bmap.text[nnext_box] == '0': #segundo piso
+        # movimentos com a caixa
+        elif self.bmap.text[next_box] in ['*', '!']:
+            if self.bmap.text[nnext_box] in ['0', '.']: 
+                # segundo piso
+                if self.bmap.text[nnext_box] == '0':
                     self.bmap.text[nnext_box] = '!'
-                elif self.bmap.text[nnext_box] == '.': #segundo ponto de caixa
+                # segundo ponto de caixa
+                elif self.bmap.text[nnext_box] == '.':
                     self.bmap.text[nnext_box] = '*'
                 
-                if self.bmap.text[next_box] == '*': self.bmap.text[next_box] = '.' 
-                else: self.bmap.text[next_box] = '0'
+                if self.bmap.text[next_box] == '*':
+                    self.bmap.text[next_box] = '.' 
+                else: 
+                    self.bmap.text[next_box] = '0'
 
                 refresh += [nnext_box]
 
-                if moviment in ['up','down']:
+                if moviment in ['up', 'down']:
                     y += inc_mov
                 else:
                     x += inc_mov
         #atualiza posição do personagem
-        self.bmap.pos = (x,y)
+        self.bmap.pos = (x, y)
         return refresh
  
                 
             
-class BoxWorld:
+class BoxWorld(object):
     def __init__(self):
         """Configura o início do jogo"""
-        self.img = None             #base para o desenho 
-        self.num_map = 0            #mapa que está sendo jogado.
-        self.undoStack = []         #pilha para desfazer
-        self.center = (0,0)         #ponto de inicio do mapa
-        self.canvas = None          #canvas principal
-        self.bmap = BMap(**MAPS[self.num_map])  #Objeto do mapa
+        self.img = None         # base para o desenho 
+        self.num_map = 0        # mapa que está sendo jogado.
+        self.undoStack = []         # pilha para desfazer
+        self.center = (0, 0)        # ponto de inicio do mapa
+        self.canvas = None          #i canvas principal
+        self.bmap = BMap(**MAPS[self.num_map])      # Objeto do mapa
         self.char = Character(self.bmap)        #Objeto do personagem
         appuifw.app.screen = "large"
         appuifw.app.menu = [
@@ -165,7 +174,9 @@ class BoxWorld:
         appuifw.app.exit_key_handler = self.quit
         self.lock = e32.Ao_lock()
         self.bpic = graphics.Image.open(BMap.SRC_IMAGE) 
-        self.canvas = appuifw.Canvas(redraw_callback = self.handleRedraw, event_callback = self.handleEvent)
+        self.canvas = appuifw.Canvas(
+                        redraw_callback = self.handleRedraw,
+                        event_callback = self.handleEvent)
         appuifw.app.body = self.canvas
         self.img = graphics.Image.new(self.canvas.size)
         
@@ -178,12 +189,13 @@ class BoxWorld:
 
     def drawBox(self, pos, simbol):
         """ Recebe a posição e o simbolo do objeto que é para desenhar"""
-        x,y = self.bmap.cropImage(simbol)
-        pos = pos[0] + self.center[0],pos[1] + self.center[1]
-        self.img.blit(self.bpic, target = pos, source = ((x,y) ,(BMap.BOX_SIZE + x,BMap.BOX_SIZE + y)))
+        x, y = self.bmap.cropImage(simbol)
+        pos = pos[0] + self.center[0], pos[1] + self.center[1]
+        self.img.blit(self.bpic, target = pos,
+                      source = ((x,y) ,(BMap.BOX_SIZE + x,BMap.BOX_SIZE + y)))
 
 
-    def moveCamera(self,center):
+    def moveCamera(self, center):
         """Atualiza posição da câmera"""
         self.center = center[:]
         self.update()
@@ -192,35 +204,39 @@ class BoxWorld:
     def moveToCenter(self):
         """Atualiza posição da câmera para o centro."""
         if self.canvas and self.bmap:
-            w,h = self.bmap.size
-            self.center = (self.canvas.size[0] - (w * BMap.BOX_SIZE)) / 2,(self.canvas.size[1] - (h * BMap.BOX_SIZE)) / 2
+            w, h = self.bmap.size
+            self.center = ((self.canvas.size[0] - (w * BMap.BOX_SIZE)) / 2,
+                           (self.canvas.size[1] - (h * BMap.BOX_SIZE)) / 2)
             self.update()
 
        
-    def update(self, refresh = []):
+    def update(self, refresh = None):
         """Atualiza o desenho do mapa
          refresh = [posicao anterior, posição atual, posição a frente]"""
         w = self.bmap.size[0]
         if not refresh:
-            self.img.clear((0,0,0))
+            self.img.clear((0, 0, 0))
             for i in range(len(self.bmap.text)):
                 simbol = self.bmap.text[i]
-                x,y = (i % self.bmap.size[0]) * BMap.BOX_SIZE, (i / self.bmap.size[0]) * BMap.BOX_SIZE
-                self.drawBox((x,y),simbol)
+                x, y = ((i % self.bmap.size[0]) * BMap.BOX_SIZE,
+                       (i / self.bmap.size[0]) * BMap.BOX_SIZE)
+                self.drawBox((x, y), simbol)
         else:
             # Atualizando posição anteior
             s = self.bmap.text[refresh[0]]
-            x,y = (refresh[0] % w) * BMap.BOX_SIZE, (refresh[0] / w) * BMap.BOX_SIZE
-            self.drawBox((x,y),s)
+            x, y = ((refresh[0] % w) * BMap.BOX_SIZE,
+                   (refresh[0] / w) * BMap.BOX_SIZE)
+            self.drawBox((x, y), s)
             # Atualizando posição a frente caso tenha uma caixa
             if len(refresh) == 3:
                 s = self.bmap.text[refresh[2]]
-                x,y = (refresh[2] % w) * BMap.BOX_SIZE, (refresh[2] / w) * BMap.BOX_SIZE
-                self.drawBox((x,y),s)
+                x, y = ((refresh[2] % w) * BMap.BOX_SIZE,
+                       (refresh[2] / w) * BMap.BOX_SIZE)
+                self.drawBox((x, y), s)
 
         # Atualizando boneco
-        x,y = self.bmap.pos[0] * BMap.BOX_SIZE, self.bmap.pos[1] * BMap.BOX_SIZE
-        self.drawBox((x,y),'@')
+        x, y = self.bmap.pos[0] * BMap.BOX_SIZE, self.bmap.pos[1] * BMap.BOX_SIZE
+        self.drawBox((x, y),'@')
         self.handleRedraw(None)
         
 
@@ -232,7 +248,9 @@ class BoxWorld:
         ev = event["keycode"]
         ret = []
 
-        if ev in [self.keys['up'],self.keys['down'],self.keys['left'],self.keys['right']]:
+        allowsKeys = [self.keys['up'], self.keys['down'], 
+                      self.keys['left'], self.keys['right']]
+        if ev in allowsKeys: 
             self.addUndoStack((self.bmap.text[:], self.bmap.pos))
             if ev == self.keys['up']:
                 ret = self.char.move('up')
@@ -249,13 +267,13 @@ class BoxWorld:
         elif ev == key_codes.EKeyBackspace:
             self.undo()  
         elif ev == key_codes.EKeyLeftArrow:
-            self.moveCamera((self.center[0] - BMap.BOX_SIZE,self.center[1]))
+            self.moveCamera((self.center[0] - BMap.BOX_SIZE, self.center[1]))
         elif ev == key_codes.EKeyRightArrow:
-            self.moveCamera((self.center[0] + BMap.BOX_SIZE,self.center[1]))
+            self.moveCamera((self.center[0] + BMap.BOX_SIZE, self.center[1]))
         elif ev ==  key_codes.EKeyDownArrow: 
-            self.moveCamera((self.center[0],self.center[1]  + BMap.BOX_SIZE))
+            self.moveCamera((self.center[0], self.center[1]  + BMap.BOX_SIZE))
         elif ev == key_codes.EKeyUpArrow: 
-            self.moveCamera((self.center[0],self.center[1]  - BMap.BOX_SIZE))
+            self.moveCamera((self.center[0], self.center[1]  - BMap.BOX_SIZE))
 
 
     def handleRedraw(self, rect):
@@ -263,7 +281,7 @@ class BoxWorld:
             self.canvas.blit(self.img)
 
 
-    def addUndoStack(self,state):
+    def addUndoStack(self, state):
         """Salva os estados na pilha de desfazer"""
         if len(self.undoStack) == 5:
             del self.undoStack[0]
@@ -274,11 +292,11 @@ class BoxWorld:
         """Defaz os últimos movimentos"""
         if self.undoStack:
             state = self.undoStack.pop()
-            self.bmap.text,self.bmap.pos = state[0][:],state[1]
+            self.bmap.text, self.bmap.pos = state[0][:], state[1]
             self.update()
 
 
-    def modeGame(self,mode):
+    def modeGame(self, mode):
         """Altera o modo do game entre paisagem e retrato"""
         if mode == 'portrait':
             appuifw.app.orientation = mode
