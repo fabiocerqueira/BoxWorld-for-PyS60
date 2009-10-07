@@ -3,7 +3,7 @@ Este jogo foi desenvolvido com o objetivo de estudo e possui licença [GPL](http
 
 O jogo é um remake do clássico jogo BoxWorld, também chamado Sokoban, para plataforma s60 usando a linguagem [Python](http://www.python.org/) e o bind da API da Nokia, originalmente em C++, para plataforma s60 -> PyS60.
 
-Foi testado em um celular N78 e também no [emulador]() disponibilizado no site da Nokia.
+Foi testado em um celular N78 e também no [emulador](http://www.forum.nokia.com/info/sw.nokia.com/id/4a7149a5-95a5-4726-913a-3c6f21eb65a5/S60-SDK-0616-3.0-mr.html) disponibilizado no site da Nokia.
 
 
 # Downloads #
